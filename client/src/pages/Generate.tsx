@@ -1,0 +1,106 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { colorSchemes, dummyThumbnails, type AspectRatio, type IThumbnail, type ThumbnailStyle } from '../assets/assets';
+import SoftBackdrop from '../components/SoftBackdrop';
+import AspectRatioSelector from '../components/AspectRatioSelector';
+import ColorSchemeSelector from '../components/ColorSchemeSelector';
+import PreviewPanel from '../components/PreviewPanel';
+import StyleSelector from '../components/StyleSelector';
+
+const Generate = () => {
+  const {id} =useParams();
+  const [title, setTitle] = useState('')
+  const [additionalDetails, setAdditionalDetails] = useState('')
+  const [thumbnail, setThumbnail] = useState<IThumbnail | null>(null)
+
+  const [loading, setLoading] = useState(false);
+
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
+  const [colorSchemeId, setColorSchemeId] = useState<String>(colorSchemes[0].id);
+  const [style, setStyle] = useState<ThumbnailStyle>('Bold & Graphic');
+
+  const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
+  const handleGenerate = async () => {}
+
+  const fetchThumbnailBy = async () => {
+    if (id){
+      const thumbnail : any =dummyThumbnails.find((thumbnail) => thumbnail._id === id);
+      setThumbnail(thumbnail);
+      setAdditionalDetails(thumbnail.user_prompt);
+      setTitle(thumbnail.title);
+      setAspectRatio(thumbnail.aspect_ratio);
+      setColorSchemeId(thumbnail.color_scheme_id);
+      setStyle(thumbnail.style);
+      setLoading(false);
+    } 
+  }
+
+  useEffect(() => {
+    if (id) {
+      fetchThumbnailBy();
+    }
+  }, [id]);
+  return (
+    <>
+      <SoftBackdrop />
+      <div className="pt-24 min-h-screen">
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-28 py-8 lg:pb-8">
+          <div className="grid lg:grid-cols-[400px_1fr] gap-8">
+            {/* LEFT PANEL */}
+            <div className={`space-y-6 ${id && 'pointer-events-none'}`}>
+              <div className="p-6 rounded-2xl bg-white/8 border border-white/12 shadow-xl space-y-6"> 
+                <div>
+                  <h2 className="text-xl font-bold text-zinc-100 mb-1">Create Your Thumbnail</h2>
+                  <p className="text-sm text-zinc-400">Design your vision and let AI bring it to life.</p>
+                </div>
+                <div className="space-y-5">
+                  {/* Title Input */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Title or Topic</label>
+                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="E.g., The Future of AI in Everyday Life" className="w-full px-4 py-3 rounded-lg  border border-white/12 bg-black/20 text-zinc-100 placeholder-text-zinc-400 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                    <div>
+                      <span className="text-xs text-zinc-400">{title.length}/100</span>
+                    </div>
+                  </div>
+                  {/* AspectRatioSelector */}
+                  <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                  {/* StyleSelector */}
+                  <StyleSelector value={style} onChange={setStyle} isOpen={styleDropdownOpen} setIsOpen={setStyleDropdownOpen} />
+                  {/* ColorSchemeSelector */}
+                  <ColorSchemeSelector value={String(colorSchemeId)} onChange={(color) => setColorSchemeId(color)} />
+
+                  {/* Details */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">
+                      Additional Prompts<span className="text-xs text-zinc-400">(optional)</span>
+                    </label>
+                    <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)} rows={3} placeholder="Add any specific elements, mood, or style requirements for your thumbnail" className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/6 text-zinc-100 placeholder-text-zinc-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none" />
+
+                  </div>
+
+                </div>
+                {/* Button */}
+                {!id && (
+                  <button onClick={handleGenerate} className="text-[15px] w-full py-3.5 rounded-xl font-medium bg-linear-to-b from-pink-500 to-pink-600 hover:from-pink-700 disabled:cursor-not-allowed transition-colors">
+                    {loading ? 'Generating...' : 'Generate Thumbnail'}
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* RIGHT PANEL */}
+            <div>
+                <div className='p-6 rounded-2xl bg-white/8 border border-white/10 shadow-xl'>
+                  <h2 className="text-lg font-semibold text-zinc-100 mb-4">Preview</h2>
+                  <PreviewPanel thumbnail={thumbnail as IThumbnail} isLoading={loading} aspectRatio={aspectRatio} />
+                </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+
+    </>
+  )
+}
+
+export default Generate

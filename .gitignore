@@ -1,0 +1,9 @@
+# frontend
+client/node_modules/
+client/dist/
+client/build/
+
+# local env files
+client/.env 
+.dist
+dist
