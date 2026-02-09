@@ -3,9 +3,13 @@ import { dummyThumbnails, type IThumbnail } from '../assets/assets';
 import SoftBackdrop from '../components/SoftBackdrop'
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowUpRightIcon, DownloadIcon, TrashIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import api from '../configs/api';
+import toast from 'react-hot-toast';
 
 const MyGeneration = () => {
 
+  const {isLoggedIn} = useAuth();
   const navigation = useNavigate();
 
   const aspectRatioMap = {
@@ -18,21 +22,50 @@ const MyGeneration = () => {
   const [loading, setLoading] = useState(false)
 
   const fetchMyThumbnails = async () => {
-    setThumbnails(dummyThumbnails as unknown as IThumbnail[])
-    setLoading(false)
+    try{
+      setLoading(true);
+      const {data} = await api.get('/api/user/thumbnails');
+      setThumbnails(data?.thumbnails || []);
+
+    }
+    catch(error: any){
+      console.error(error);
+      toast.error(error?.response?.data?.message || error.message);
+    }
+    finally{
+      setLoading(false);
+    }
+    // setThumbnails(dummyThumbnails as unknown as IThumbnail[])
+    // setLoading(false)
   }
 
   const handleDownload = ((image_url: string) => {
-    window.open(image_url, '_blank');
+        const link = document.createElement('a');
+        link.href = image_url.replace('/upload', '/upload/f1_attachment');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
   })
 
   const handleDelete = async (id: string) => {
-    console.log(id)
+    try{
+      const confirm = window.confirm('Are you sure you want to delete this thumbnail? This action is irreversible.');
+      if(!confirm) return;
+      const {data} = await api.delete(`/api/user/thumbnail/${id}`);
+      toast.success(data.message);
+      setThumbnails(thumbnails.filter((thumbnail) => thumbnail._id !== id));
+    }
+    catch(error: any){
+      console.error(error);
+      toast.error(error?.response?.data?.message || error.message);
+    }
   }
 
   useEffect(() => {
+    if(isLoggedIn){
       fetchMyThumbnails();
-    }, [])
+    }
+    }, [isLoggedIn])
 
   return (
     <>
